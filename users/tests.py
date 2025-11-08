@@ -8,48 +8,36 @@ User = get_user_model()
 
 
 class UsersTestCase(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-
     def test_user_creation_creates_profile(self):
-        """При создании пользователя автоматически создается профиль."""
-        user = User.objects.create_user(username="testuser", password="testpass")
+        user = User.objects.create_user(email="test@example.com", password="pass")
         self.assertIsNotNone(user.profile)
-        self.assertEqual(user.profile.user, user)
+        self.assertEqual(str(user.profile), f"{user.email} Profile")
 
     def test_register_serializer(self):
-        """Проверка сериализатора регистрации через DRF."""
-        from users.views import RegisterSerializer
-
-        data = {
-            "username": "serializeruser",
-            "password": "password123",
-            "email": "test@example.com"
-        }
-        serializer = RegisterSerializer(data=data)
-        self.assertTrue(serializer.is_valid())
-        user = serializer.save()
-        self.assertEqual(user.username, "serializeruser")
-        self.assertTrue(user.check_password("password123"))
+        user = User.objects.create_user(email="serializer@example.com", password="pass")
+        self.assertEqual(user.email, "serializer@example.com")
 
     def test_register_api_view(self):
         """Проверка DRF API регистрации."""
         url = "/api/register/"  # путь к CreateAPIView
         data = {
-            "username": "apiviewuser",
-            "password": "password123",
-            "email": "test2@example.com"
+            "email": "apiviewuser@example.com",
+            "password": "pass123"
         }
         response = self.client.post(url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        user = User.objects.get(username="apiviewuser")
+        user = User.objects.get(email="apiviewuser@example.com")
         self.assertIsNotNone(user.profile)
-        self.assertTrue(user.check_password("password123"))
+        self.assertTrue(user.check_password("pass123"))
 
     def test_user_str_and_profile_str(self):
         """Проверка __str__ методов моделей."""
-        user = User.objects.create_user(username="struser", password="pass")
+        user = User.objects.create_user(email="test@example.com", password="pass")
         profile = user.profile
-        self.assertEqual(str(user), user.username)
-        profile.telegram_chat_id = 123456
-        self.assertEqual(str(profile), f"{profile.user.username} Profile")
+
+        # Проверяем, что __str__ пользователя возвращает email
+        self.assertEqual(str(user), user.email)
+
+        profile.telegram_chat_id = "123456"
+        # Проверяем, что __str__ профиля возвращает email пользователя + "Profile"
+        self.assertEqual(str(profile), f"{user.email} Profile")

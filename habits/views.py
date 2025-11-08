@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, generics
 from rest_framework.pagination import PageNumberPagination
 
 from .models import Habit
@@ -34,3 +34,13 @@ class HabitViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Автоматически назначает текущего пользователя как владельца привычки."""
         serializer.save(owner=self.request.user)
+
+
+class PublicHabitsListView(generics.ListAPIView):
+    """
+    Возвращает список публичных привычек (is_public=True).
+    Доступно без авторизации.
+    """
+    queryset = Habit.objects.filter(is_public=True)
+    serializer_class = HabitSerializer
+    permission_classes = [permissions.AllowAny]

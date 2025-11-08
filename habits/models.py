@@ -58,6 +58,5 @@ class Habit(models.Model):
             if self.related_habit.pk == self.pk:
                 raise ValidationError("Привычка не может быть связана сама с собой.")
 
-    def __str__(self) -> str:
-        # Возвращаем только действие, чтобы тест проходил
-        return self.action
+    def __str__(self):
+        return f"{self.action} ({'pleasant' if self.is_rewarding else 'useful'})"
